@@ -1,0 +1,20 @@
+.header {
+  background-color: white;
+  padding: 20px 30px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-left: 250px; /* Account for sidebar */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.8rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+}

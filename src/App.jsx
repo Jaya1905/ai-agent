@@ -1,35 +1,41 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+import AppLayout from './layouts/AppLayout';
+
+import Dashboard from './pages/Dashboard';
+import Tags from './pages/Tags';
+import TagDetails from './pages/TagDetails';
+import Questions from './pages/Questions';
+import QuestionDetails from './pages/QuestionDetails';
+import QuestionsByTag from './pages/QuestionsByTag';
+import Leads from './pages/Leads';
+import LeadDetails from './pages/LeadDetails';
+import Calls from './pages/Calls';
+import CallSessionDetails from './pages/CallSessionDetails';
+import WebhookEvents from './pages/WebhookEvents';
+import ResponsesLog from './pages/ResponsesLog';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/tags" element={<Tags />} />
+          <Route path="/tags/:id" element={<TagDetails />} />
+          <Route path="/questions" element={<Questions />} />
+          <Route path="/questions/:id" element={<QuestionDetails />} />
+          <Route path="/questions/by-tag/:tagId" element={<QuestionsByTag />} />
+          <Route path="/leads" element={<Leads />} />
+          <Route path="/leads/:id" element={<LeadDetails />} />
+          <Route path="/calls" element={<Calls />} />
+          <Route path="/calls/session/:id" element={<CallSessionDetails />} />
+          <Route path="/webhooks" element={<WebhookEvents />} />
+          <Route path="/responses" element={<ResponsesLog />} />
+        </Route>
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
