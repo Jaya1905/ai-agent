@@ -15,6 +15,7 @@ const Leads = () => {
 
   const [showForm, setShowForm] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
+  const [showZohoImport, setShowZohoImport] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -72,7 +73,11 @@ const Leads = () => {
       name: lead.name,
       phone: lead.phone,
       email: lead.email,
-      tagId: lead.tagId,
+      tagId: 
+      typeof lead.tagId === 'object'
+    ? lead.tagId._id
+    : lead.tagId || '',
+
     });
 
     setShowForm(true);
@@ -101,10 +106,19 @@ const Leads = () => {
     setShowForm(false);
   };
 
-  const getTagName = (tagId) => {
-    const tag = tags.find((t) => t._id === tagId);
-    return tag ? tag.name : 'Unknown';
-  };
+const getTagName = (tagValue) => {
+  if (!tagValue) return 'Unknown';
+  
+  if (typeof tagValue === 'object') {
+    return tagValue.name || 'Unknown';
+  }
+
+ 
+  const tag = tags.find((t) => t._id === tagValue);
+  return tag ? tag.name : 'Unknown';
+};
+
+
 
   return (
     <div>
@@ -262,6 +276,27 @@ const Leads = () => {
               {editingLead ? 'Edit Lead' : 'Add New Lead'}
             </h3>
 
+            {!editingLead && (
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setShowZohoImport(true);
+                }}
+                className="
+                  px-4 py-2
+                  text-sm
+                  font-semibold
+                  rounded-lg
+                  bg-green-600
+                  text-white
+                  hover:bg-green-700
+                  mb-4
+                "
+              >
+                Import From Zoho
+              </button>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
 
               <div>
@@ -345,6 +380,62 @@ const Leads = () => {
           </div>
         </div>
       )}
+
+
+      {showZohoImport && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+
+            <h3 className="text-xl font-bold mb-6 text-[#2f1e14]">
+              Import Leads From Zoho
+            </h3>
+
+            
+            <div className="mb-6">
+
+              <label className="text-sm font-medium">Tag</label>
+
+              <select
+                value={formData.tagId}
+                onChange={(e) =>
+                  setFormData({ ...formData, tagId: e.target.value })
+                }
+                className="mt-1 w-full rounded-lg border px-3 py-2"
+                required
+              >
+                <option value="">Select Tag</option>
+                {tags.map((tag) => (
+                  <option key={tag._id} value={tag._id}>
+                    {tag.name}
+                  </option>
+                ))}
+              </select>
+
+            </div>
+
+
+            <div className="flex justify-end gap-3">
+
+              <button
+                onClick={() => setShowZohoImport(false)}
+                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+
+              <button
+                className="px-5 py-2 rounded-lg bg-[#814c27] text-white hover:bg-[#9b5b38]"
+              >
+                Import
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+      )}
+
 
     </div>
   );
