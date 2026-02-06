@@ -134,6 +134,9 @@ const getTagName = (tagValue) => {
           </p>
         </div>
 
+        <div className="flex items-center gap-3">
+
+        {/* Add Lead */}
         <button
           onClick={() => setShowForm(true)}
           className="
@@ -150,6 +153,26 @@ const getTagName = (tagValue) => {
         >
           + Add Lead
         </button>
+
+        <button
+          onClick={() => setShowZohoImport(true)}
+          className="
+            flex items-center gap-2
+            bg-green-600
+            hover:bg-green-700
+            text-white
+            px-6 py-2.5
+            rounded-lg
+            shadow-md
+            transition
+            font-semibold
+          "
+        >
+          Import From Zoho
+        </button>
+
+      </div>
+
       </div>
 
       {error && (
@@ -276,26 +299,7 @@ const getTagName = (tagValue) => {
               {editingLead ? 'Edit Lead' : 'Add New Lead'}
             </h3>
 
-            {!editingLead && (
-              <button
-                onClick={() => {
-                  setShowForm(false);
-                  setShowZohoImport(true);
-                }}
-                className="
-                  px-4 py-2
-                  text-sm
-                  font-semibold
-                  rounded-lg
-                  bg-green-600
-                  text-white
-                  hover:bg-green-700
-                  mb-4
-                "
-              >
-                Import From Zoho
-              </button>
-            )}
+         
 
             <form onSubmit={handleSubmit} className="space-y-4">
 
