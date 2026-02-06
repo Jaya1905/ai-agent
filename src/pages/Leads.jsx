@@ -5,6 +5,7 @@ import {
   updateLead,
   deleteLead,
   getTags,
+  importZohoLeads,
 } from '../services/api';
 
 const Leads = () => {
@@ -16,6 +17,7 @@ const Leads = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
   const [showZohoImport, setShowZohoImport] = useState(false);
+  const [zohoLoading, setZohoLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -48,6 +50,35 @@ const Leads = () => {
       console.error('Failed to fetch tags');
     }
   };
+
+
+  const handleZohoImport = async () => {
+    if (!formData.tagId) return;
+
+    try {
+      setZohoLoading(true);
+      setError(null);
+
+      await importZohoLeads({
+        tagId: formData.tagId,
+      });
+
+      await fetchLeads();
+
+      setShowZohoImport(false);
+
+      setFormData((prev) => ({
+        ...prev,
+        tagId: '',
+      }));
+    } catch (err) {
+      console.error(err);
+      setError('Failed to import leads from Zoho');
+    } finally {
+      setZohoLoading(false);
+    }
+  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -429,10 +460,13 @@ const getTagName = (tagValue) => {
               </button>
 
               <button
-                className="px-5 py-2 rounded-lg bg-[#814c27] text-white hover:bg-[#9b5b38]"
+                onClick={handleZohoImport}
+                disabled={zohoLoading || !formData.tagId}
+                className="px-5 py-2 rounded-lg bg-[#814c27] text-white hover:bg-[#9b5b38] disabled:opacity-60"
               >
-                Import
+                {zohoLoading ? 'Importing...' : 'Import'}
               </button>
+
 
             </div>
 

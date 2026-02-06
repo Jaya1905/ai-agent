@@ -31,6 +31,9 @@ export const createLead = (data) => api.post('/api/leads', data)
 export const updateLead = (id, data) => api.put(`/api/leads/${id}`, data)
 export const deleteLead = (id) => api.delete(`/api/leads/${id}`)
 
+//Zoho import
+export const importZohoLeads = (data) =>  api.post('/api/leads/import-zoho', data);
+
 // Calls
 export const startCall = (leadId) => api.post(`/api/calls/start/${leadId}`)
 export const getCallSession = (sessionId) =>
@@ -40,5 +43,7 @@ export const getLeadCallSessions = (leadId, params) =>
 export const endCall = (sessionId) => api.post(`/api/calls/end/${sessionId}`)
 export const resetAttempts = (leadId) =>
   api.patch(`/api/leads/${leadId}/reset-attempts`)
+
+
 
 export default api
