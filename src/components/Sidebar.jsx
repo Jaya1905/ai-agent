@@ -9,6 +9,7 @@ import {
   FaFileAlt,
   FaAngleDoubleLeft,
   FaAngleDoubleRight,
+  FaHeadset,
 } from 'react-icons/fa';
 
 import logo from '../assets/Bright_koda_logo.png';
@@ -21,6 +22,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     { path: '/tags', label: 'Tags', icon: <FaTags /> },
     { path: '/questions', label: 'Questions', icon: <FaQuestionCircle /> },
     { path: '/leads', label: 'Leads', icon: <FaUsers /> },
+    { path: '/agents', label: 'Agents', icon: <FaHeadset /> },
     { path: '/calls', label: 'Calls', icon: <FaPhone /> },
     { path: '/webhooks', label: 'Webhooks', icon: <FaLink /> },
     { path: '/responses', label: 'Responses', icon: <FaFileAlt /> },

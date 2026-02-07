@@ -44,6 +44,13 @@ export const endCall = (sessionId) => api.post(`/api/calls/end/${sessionId}`)
 export const resetAttempts = (leadId) =>
   api.patch(`/api/leads/${leadId}/reset-attempts`)
 
+// Agents
+export const getAgents = (params) => api.get('/api/agents', { params })
+export const createAgent = (data) => api.post('/api/agents', data)
+export const updateAgent = (id, data) => api.put(`/api/agents/${id}`, data)
+export const deleteAgent = (id) => api.delete(`/api/agents/${id}`)
+
+
 
 
 export default api

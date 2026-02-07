@@ -6,6 +6,7 @@ import {
   getLeadCallSessions,
   endCall,
   resetAttempts,
+  getAgents,
 } from '../services/api'
 
 const Calls = () => {
@@ -14,6 +15,9 @@ const Calls = () => {
   const [callSessions, setCallSessions] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [agents, setAgents] = useState([])
+  const [showAgentModal, setShowAgentModal] = useState(false)
+  const [callingLeadId, setCallingLeadId] = useState(null)
 
   useEffect(() => {
     fetchLeads()
@@ -95,6 +99,37 @@ const Calls = () => {
     return lead ? lead.name : 'Unknown'
   }
 
+  const fetchAgents = async () => {
+    try {
+      const res = await getAgents()
+      setAgents(res.data.data || [])
+    } catch (err) {
+      console.log(err)
+      setError('Failed to fetch agents')
+    }
+  }
+
+  const handleAgentCall = async (phoneNumberId) => {
+    setLoading(true)
+
+    try {
+      await startCall(callingLeadId, {
+        phoneNumberId,
+      })
+
+      alert('Call started successfully!')
+      setShowAgentModal(false)
+
+    } catch (err) {
+      console.log(err)
+      setError('Failed to start call')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
+
   return (
     <div>
       {/* PAGE HEADER */}
@@ -150,7 +185,11 @@ const Calls = () => {
                 <td className='px-6 py-4'>
                   <div className='flex gap-3'>
                     <button
-                      onClick={() => handleStartCall(lead._id)}
+                      onClick={() => {
+                        setCallingLeadId(lead._id)
+                        fetchAgents()
+                        setShowAgentModal(true)
+                      }}
                       disabled={loading}
                       className='px-3 py-1.5 rounded-md text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100'
                     >
@@ -267,6 +306,61 @@ const Calls = () => {
           )}
         </div>
       )}
+
+
+      {showAgentModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+
+            <h3 className="text-xl font-bold mb-6 text-[#2f1e14]">
+              Select Agent to Call
+            </h3>
+
+            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+
+              {agents.map((agent) => (
+                <div
+                  key={agent._id}
+                  className="flex justify-between items-center border rounded-lg px-4 py-3"
+                >
+                  <div>
+                    <div className="font-semibold">{agent.agentName}</div>
+                    <div className="text-sm text-gray-500">
+                      {agent.phoneNumber}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleAgentCall(agent.phoneNumberId)}
+                    disabled={loading || !agent.isActive}
+                    className="px-4 py-2 rounded-md text-sm font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                  >
+                    Call
+                  </button>
+                </div>
+              ))}
+
+              {!agents.length && (
+                <div className="text-gray-500 text-sm">
+                  No agents found.
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-6">
+              <button
+                onClick={() => setShowAgentModal(false)}
+                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

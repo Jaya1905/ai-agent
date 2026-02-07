@@ -14,6 +14,7 @@ import Calls from './pages/Calls';
 import CallSessionDetails from './pages/CallSessionDetails';
 import WebhookEvents from './pages/WebhookEvents';
 import ResponsesLog from './pages/ResponsesLog';
+import Agents from './pages/Agents';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/tags" element={<Tags />} />
+          <Route path='/agents' element={<Agents />} />
           <Route path="/tags/:id" element={<TagDetails />} />
           <Route path="/questions" element={<Questions />} />
           <Route path="/questions/:id" element={<QuestionDetails />} />
