@@ -27,28 +27,28 @@ const Calls = () => {
     try {
       const response = await getLeads()
       setLeads(response.data.data || [])
-    } catch (_) {
-      setError('Failed to fetch leads')
+    } catch (error) {
+      setError(error?.response?.data?.error)
     }
   }
 
-  const handleStartCall = async (leadId) => {
-    setLoading(true)
-    try {
-      await startCall(leadId)
+  // const handleStartCall = async (leadId) => {
+  //   setLoading(true)
+  //   try {
+  //     await startCall(leadId)
 
-      if (selectedLead === leadId) {
-        fetchCallSessions(leadId)
-      }
+  //     if (selectedLead === leadId) {
+  //       fetchCallSessions(leadId)
+  //     }
 
-      alert('Call started successfully!')
-    } catch (ex) {
-      console.log(ex)
-      setError('Failed to start call')
-    } finally {
-      setLoading(false)
-    }
-  }
+  //     alert('Call started successfully!')
+  //   } catch (ex) {
+  //     console.log(ex)
+  //     setError(ex?.response?.data?.error)
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
 
   const fetchCallSessions = async (leadId) => {
     setLoading(true)
@@ -58,7 +58,7 @@ const Calls = () => {
       setSelectedLead(leadId)
     } catch (ex) {
       console.log(ex)
-      setError('Failed to fetch call sessions')
+      setError(ex?.response?.data?.error)
     } finally {
       setLoading(false)
     }
@@ -75,7 +75,7 @@ const Calls = () => {
       }
     } catch (ex) {
       console.log(ex)
-      setError('Failed to end call')
+      setError(ex?.response?.data?.error)
     }
   }
 
@@ -90,7 +90,7 @@ const Calls = () => {
       }
     } catch (ex) {
       console.log(ex)
-      setError('Failed to reset attempts')
+      setError(ex?.response?.data?.error)
     }
   }
 
@@ -109,26 +109,23 @@ const Calls = () => {
     }
   }
 
-  const handleAgentCall = async (phoneNumberId) => {
+  const handleAgentCall = async (agentId) => {
     setLoading(true)
 
     try {
       await startCall(callingLeadId, {
-        phoneNumberId,
+        agentId,
       })
 
       alert('Call started successfully!')
       setShowAgentModal(false)
-
     } catch (err) {
-      console.log(err)
-      setError('Failed to start call')
+      setError(err?.response?.data?.error)
+      alert(err?.response?.data?.error)
     } finally {
       setLoading(false)
     }
   }
-
-
 
   return (
     <div>
@@ -307,34 +304,30 @@ const Calls = () => {
         </div>
       )}
 
-
       {showAgentModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
-
-            <h3 className="text-xl font-bold mb-6 text-[#2f1e14]">
+        <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-50'>
+          <div className='bg-white rounded-xl shadow-xl w-full max-w-lg p-6'>
+            <h3 className='text-xl font-bold mb-6 text-[#2f1e14]'>
               Select Agent to Call
             </h3>
 
-            <div className="space-y-3 max-h-[400px] overflow-y-auto">
-
+            <div className='space-y-3 max-h-[400px] overflow-y-auto'>
               {agents.map((agent) => (
                 <div
                   key={agent._id}
-                  className="flex justify-between items-center border rounded-lg px-4 py-3"
+                  className='flex justify-between items-center border rounded-lg px-4 py-3'
                 >
                   <div>
-                    <div className="font-semibold">{agent.agentName}</div>
-                    <div className="text-sm text-gray-500">
+                    <div className='font-semibold'>{agent.agentName}</div>
+                    <div className='text-sm text-gray-500'>
                       {agent.phoneNumber}
                     </div>
                   </div>
 
                   <button
-                    onClick={() => handleAgentCall(agent.phoneNumberId)}
+                    onClick={() => handleAgentCall(agent._id)}
                     disabled={loading || !agent.isActive}
-                    className="px-4 py-2 rounded-md text-sm font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                    className='px-4 py-2 rounded-md text-sm font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50'
                   >
                     Call
                   </button>
@@ -342,25 +335,21 @@ const Calls = () => {
               ))}
 
               {!agents.length && (
-                <div className="text-gray-500 text-sm">
-                  No agents found.
-                </div>
+                <div className='text-gray-500 text-sm'>No agents found.</div>
               )}
             </div>
 
-            <div className="flex justify-end pt-6">
+            <div className='flex justify-end pt-6'>
               <button
                 onClick={() => setShowAgentModal(false)}
-                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+                className='px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200'
               >
                 Cancel
               </button>
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   )
 }

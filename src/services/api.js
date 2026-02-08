@@ -32,10 +32,12 @@ export const updateLead = (id, data) => api.put(`/api/leads/${id}`, data)
 export const deleteLead = (id) => api.delete(`/api/leads/${id}`)
 
 //Zoho import
-export const importZohoLeads = (data) =>  api.post('/api/leads/import-zoho', data);
+export const importZohoLeads = (data) =>
+  api.post('/api/leads/import-zoho', data)
 
 // Calls
-export const startCall = (leadId) => api.post(`/api/calls/start/${leadId}`)
+export const startCall = (leadId, params) =>
+  api.post(`/api/calls/start/${leadId}`, params)
 export const getCallSession = (sessionId) =>
   api.get(`/api/calls/session/${sessionId}`)
 export const getLeadCallSessions = (leadId, params) =>
@@ -45,12 +47,10 @@ export const resetAttempts = (leadId) =>
   api.patch(`/api/leads/${leadId}/reset-attempts`)
 
 // Agents
-export const getAgents = (params) => api.get('/api/agents', { params })
+export const getAgents = (params) =>
+  api.get('/api/agents?isActive=true', { params })
 export const createAgent = (data) => api.post('/api/agents', data)
 export const updateAgent = (id, data) => api.put(`/api/agents/${id}`, data)
 export const deleteAgent = (id) => api.delete(`/api/agents/${id}`)
-
-
-
 
 export default api
