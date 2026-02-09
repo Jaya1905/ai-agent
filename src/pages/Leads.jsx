@@ -7,17 +7,20 @@ import {
   getTags,
   importZohoLeads,
 } from '../services/api'
+import { toast } from 'react-toastify'
+
 
 const Leads = () => {
   const [leads, setLeads] = useState([])
   const [tags, setTags] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
   const [showForm, setShowForm] = useState(false)
   const [editingLead, setEditingLead] = useState(null)
   const [showZohoImport, setShowZohoImport] = useState(false)
   const [zohoLoading, setZohoLoading] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletingLead, setDeletingLead] = useState(null)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -32,22 +35,49 @@ const Leads = () => {
   }, [])
 
   const fetchLeads = async () => {
+    setLoading(true)
     try {
+
       const response = await getLeads()
       setLeads(response.data.data || [])
     } catch (error) {
-      setError(error?.response?.data?.error)
+      console.error('Fetch leads error:', error)
+
+      if (error.response) {
+        console.log(error.response.data)
+        console.log(error.response.status)
+      } else if (error.request) {
+        console.log(error.request)
+      } else {
+        console.log('Error', error.message)
+      }
+
+      toast.error(
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          'Failed to fetch leads'
+      )
     } finally {
       setLoading(false)
     }
   }
+
 
   const fetchTags = async () => {
     try {
       const response = await getTags()
       setTags(response.data.data || [])
     } catch (error) {
-      console.error(error?.response?.data?.error)
+      console.error('Fetch tags error:', error)
+
+      if (error.response) {
+        console.log(error.response.data)
+        console.log(error.response.status)
+      } else if (error.request) {
+        console.log(error.request)
+      } else {
+        console.log('Error', error.message)
+      }
     }
   }
 
@@ -56,7 +86,6 @@ const Leads = () => {
 
     try {
       setZohoLoading(true)
-      setError(null)
 
       await importZohoLeads({
         tagId: formData.tagId,
@@ -70,10 +99,24 @@ const Leads = () => {
         ...prev,
         tagId: '',
       }))
-    } catch (err) {
-      console.error(err)
-      setError('Failed to import leads from Zoho')
-    } finally {
+    } catch (error) {
+        console.error('Zoho import error:', error)
+
+        if (error.response) {
+          console.log(error.response.data)
+          console.log(error.response.status)
+        } else if (error.request) {
+          console.log(error.request)
+        } else {
+          console.log('Error', error.message)
+        }
+
+        toast.error(
+          error.response?.data?.error ||
+            error.response?.data?.message ||
+            'Failed to import leads from Zoho'
+        )
+      } finally {
       setZohoLoading(false)
     }
   }
@@ -89,10 +132,31 @@ const Leads = () => {
       }
 
       fetchLeads()
+      toast.success(
+        editingLead
+          ? 'Lead updated successfully'
+          : 'Lead created successfully'
+      )
+
       resetForm()
     } catch (error) {
-      setError(error.response?.data?.error)
-    }
+        console.error('Save lead error:', error)
+
+        if (error.response) {
+          console.log(error.response.data)
+          console.log(error.response.status)
+        } else if (error.request) {
+          console.log(error.request)
+        } else {
+          console.log('Error', error.message)
+        }
+
+        toast.error(
+          error.response?.data?.error ||
+            error.response?.data?.message ||
+            'Failed to save lead'
+        )
+      }
   }
 
   const handleEdit = (lead) => {
@@ -108,16 +172,60 @@ const Leads = () => {
     setShowForm(true)
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this lead?')) return
+  // const handleDelete = async (id) => {
+  //   if (!window.confirm('Are you sure you want to delete this lead?')) return
 
+  //   try {
+  //     await deleteLead(id)
+  //     fetchLeads()
+  //     toast.success('Lead deleted successfully')
+  //   } catch (error) {
+  //       console.error('Delete lead error:', error)
+
+  //       if (error.response) {
+  //         console.log(error.response.data)
+  //         console.log(error.response.status)
+  //       } else if (error.request) {
+  //         console.log(error.request)
+  //       } else {
+  //         console.log('Error', error.message)
+  //       }
+
+  //       toast.error(
+  //         error.response?.data?.error ||
+  //           error.response?.data?.message ||
+  //           'Failed to delete lead'
+  //       )
+  //     }
+  // }
+
+  const handleDeleteClick = (lead) => {
+    setDeletingLead(lead)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDelete = async () => {
     try {
-      await deleteLead(id)
-      fetchLeads()
+      await deleteLead(deletingLead._id)
+
+      await fetchLeads()
+
+      toast.success('Lead deleted successfully')
     } catch (error) {
-      setError(error.response?.data?.error)
+      console.error('Delete lead error:', error)
+
+      toast.error(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          'Failed to delete lead'
+      )
+    } finally {
+      setShowDeleteModal(false)
+      setDeletingLead(null)
     }
   }
+
+
 
   const resetForm = () => {
     setFormData({
@@ -190,12 +298,6 @@ const Leads = () => {
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className='mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg'>
-          {error}
-        </div>
-      )}
 
       {/* TABLE CARD */}
       <div className='bg-white rounded-xl shadow-lg overflow-hidden'>
@@ -271,7 +373,7 @@ const Leads = () => {
                       </button>
 
                       <button
-                        onClick={() => handleDelete(lead._id)}
+                        onClick={() => handleDeleteClick(lead)}
                         className='
                           px-3 py-1.5
                           rounded-md
@@ -432,6 +534,46 @@ const Leads = () => {
                 className='px-5 py-2 rounded-lg bg-[#814c27] text-white hover:bg-[#9b5b38] disabled:opacity-60'
               >
                 {zohoLoading ? 'Importing...' : 'Import'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE MODAL */}
+      {showDeleteModal && deletingLead && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+
+            <h3 className="text-xl font-bold text-[#2f1e14] mb-3">
+              Delete Lead
+            </h3>
+
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to delete
+              <span className="font-semibold text-gray-900">
+                {' '}“{deletingLead.name}”
+              </span>
+              ? This action cannot be undone.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setDeletingLead(null)
+                }}
+                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmDelete}
+                className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+              >
+                Delete
               </button>
             </div>
           </div>

@@ -5,11 +5,11 @@ import {
   updateAgent,
   deleteAgent,
 } from '../services/api'
+import { toast } from 'react-toastify'
 
 const Agents = () => {
   const [agents, setAgents] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
   const [showForm, setShowForm] = useState(false)
   const [editingAgent, setEditingAgent] = useState(null)
@@ -35,7 +35,11 @@ const Agents = () => {
       setAgents(res.data.data || [])
     } catch (err) {
       console.error(err)
-      setError('Failed to fetch agents')
+      toast.error(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        'Failed to fetch agents'
+      )
     } finally {
       setLoading(false)
     }
@@ -43,7 +47,6 @@ const Agents = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError(null)
 
     try {
       if (editingAgent) {
@@ -53,6 +56,11 @@ const Agents = () => {
       }
 
       await fetchAgents()
+      toast.success(
+        editingAgent
+          ? 'Agent updated successfully'
+          : 'Agent created successfully'
+      )
       resetForm()
     } catch (error) {
       console.error(`error = `, error)
@@ -72,7 +80,11 @@ const Agents = () => {
         console.log('Error', error.message)
       }
       console.log(error.config)
-      setError(error.response?.data?.error)
+      toast.error(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to save agent'
+      )
     }
   }
 
@@ -100,9 +112,14 @@ const Agents = () => {
     try {
       await deleteAgent(deletingAgent._id)
       await fetchAgents()
+      toast.success('Agent deleted successfully')
     } catch (err) {
       console.error(err)
-      setError('Failed to delete agent')
+      toast.error(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        'Failed to delete agent'
+      )
     } finally {
       setShowDeleteModal(false)
       setDeletingAgent(null)
@@ -149,12 +166,6 @@ const Agents = () => {
           + Add Agent
         </button>
       </div>
-
-      {error && (
-        <div className='mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg'>
-          {error}
-        </div>
-      )}
 
       {/* TABLE */}
       <div className='bg-white rounded-xl shadow-lg overflow-hidden'>

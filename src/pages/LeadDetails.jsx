@@ -1,22 +1,37 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getLeadById } from '../services/api';
+import { toast } from 'react-toastify';
 
 const LeadDetails = () => {
   const { id } = useParams();
   const [lead, setLead] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchLead = async () => {
       try {
-        const response = await getLeadById(id);
-        setLead(response.data.data);
-      } catch (_) { // eslint-disable-line no-unused-vars
-        setError('Failed to fetch lead details');
+        const response = await getLeadById(id)
+        setLead(response.data.data)
+      } catch (error) {
+        console.error('Fetch lead details error:', error)
+
+        if (error.response) {
+          console.log(error.response.data)
+          console.log(error.response.status)
+        } else if (error.request) {
+          console.log(error.request)
+        } else {
+          console.log('Error', error.message)
+        }
+
+        toast.error(
+            error.response?.data?.error ||
+            error.response?.data?.message ||
+            'Failed to fetch lead details'
+        )
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     };
 
@@ -24,7 +39,6 @@ const LeadDetails = () => {
   }, [id]);
 
   if (loading) return <p className="p-6">Loading...</p>;
-  if (error) return <p className="p-6 text-red-500">{error}</p>;
   if (!lead) return <p className="p-6">Lead not found</p>;
 
   return (

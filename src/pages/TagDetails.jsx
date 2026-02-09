@@ -1,21 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getTagById } from '../services/api';
+import { toast } from 'react-toastify';
 
 const TagDetails = () => {
   const { id } = useParams();
   const [tag, setTag] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchTag = async () => {
       try {
         const response = await getTagById(id);
         setTag(response.data.data);
-      } catch (_) { // eslint-disable-line no-unused-vars
-        setError('Failed to fetch tag details');
-      } finally {
+      } catch (error) {
+        console.error('Fetch tag error:', error);
+
+        if (error.response) {
+            console.log(error.response.data);
+            console.log(error.response.status);
+        } else if (error.request) {
+            console.log(error.request);
+        } else {
+            console.log('Error', error.message);
+        }
+
+        toast.error(
+            error.response?.data?.error ||
+            error.response?.data?.message ||
+            'Failed to fetch tag details'
+        );
+        } finally {
         setLoading(false);
       }
     };
@@ -24,7 +39,6 @@ const TagDetails = () => {
   }, [id]);
 
   if (loading) return <p className="p-6">Loading...</p>;
-  if (error) return <p className="p-6 text-red-500">{error}</p>;
   if (!tag) return <p className="p-6">Tag not found</p>;
 
     return (

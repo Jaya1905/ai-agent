@@ -12,13 +12,31 @@ const CallSessionDetails = () => {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const response = await getCallSession(id);
-        setSession(response.data.data);
-      } catch (_) {
-        setError('Failed to fetch call session details');
+        setError(null)
+
+        const response = await getCallSession(id)
+        setSession(response.data.data)
+      } catch (error) {
+        console.error('Fetch call session error:', error)
+
+        if (error.response) {
+          console.log(error.response.data)
+          console.log(error.response.status)
+        } else if (error.request) {
+          console.log(error.request)
+        } else {
+          console.log('Error', error.message)
+        }
+
+        setError(
+          error.response?.data?.error ||
+            error.response?.data?.message ||
+            'Failed to fetch call session details'
+        )
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
+
     };
 
     fetchSession();

@@ -8,16 +8,20 @@ import {
   resetAttempts,
   getAgents,
 } from '../services/api'
+import { toast } from 'react-toastify'
 
 const Calls = () => {
   const [leads, setLeads] = useState([])
   const [selectedLead, setSelectedLead] = useState(null)
   const [callSessions, setCallSessions] = useState([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
   const [agents, setAgents] = useState([])
   const [showAgentModal, setShowAgentModal] = useState(false)
   const [callingLeadId, setCallingLeadId] = useState(null)
+  const [showResetModal, setShowResetModal] = useState(false)
+  const [resettingLead, setResettingLead] = useState(null)
+  const [showEndCallModal, setShowEndCallModal] = useState(false)
+  const [endingSession, setEndingSession] = useState(null)
 
   useEffect(() => {
     fetchLeads()
@@ -25,12 +29,29 @@ const Calls = () => {
 
   const fetchLeads = async () => {
     try {
+
       const response = await getLeads()
       setLeads(response.data.data || [])
     } catch (error) {
-      setError(error?.response?.data?.error)
+      console.error('Fetch leads error:', error)
+
+      if (error.response) {
+        console.log(error.response.data)
+        console.log(error.response.status)
+      } else if (error.request) {
+        console.log(error.request)
+      } else {
+        console.log('Error', error.message)
+      }
+
+      toast.error(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          'Failed to fetch leads'
+      )
     }
   }
+
 
   // const handleStartCall = async (leadId) => {
   //   setLoading(true)
@@ -56,41 +77,73 @@ const Calls = () => {
       const response = await getLeadCallSessions(leadId)
       setCallSessions(response.data.data || [])
       setSelectedLead(leadId)
-    } catch (ex) {
-      console.log(ex)
-      setError(ex?.response?.data?.error)
-    } finally {
+    } catch (error) {
+        console.error('Fetch call sessions error:', error)
+
+        if (error.response) {
+          console.log(error.response.data)
+          console.log(error.response.status)
+        } else if (error.request) {
+          console.log(error.request)
+        } else {
+          console.log('Error', error.message)
+        }
+
+        toast.error(
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          'Failed to fetch call sessions'
+        )
+      } finally {
       setLoading(false)
     }
   }
 
-  const handleEndCall = async (sessionId) => {
-    if (!window.confirm('End this call?')) return
-
+  const confirmEndCall = async () => {
     try {
-      await endCall(sessionId)
+      await endCall(endingSession._id)
+
+      toast.success('Call ended successfully')
 
       if (selectedLead) {
         fetchCallSessions(selectedLead)
       }
-    } catch (ex) {
-      console.log(ex)
-      setError(ex?.response?.data?.error)
+    } catch (error) {
+      console.error('End call error:', error)
+
+      toast.error(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to end call'
+      )
+    } finally {
+      setShowEndCallModal(false)
+      setEndingSession(null)
     }
   }
 
-  const handleResetAttempts = async (leadId) => {
-    if (!window.confirm('Are you sure to reset attempts?')) return
-
+  const confirmResetAttempts = async () => {
     try {
-      await resetAttempts(leadId)
+      await resetAttempts(resettingLead._id)
+
+      toast.success('Attempts reset successfully')
+
+      await fetchLeads()
 
       if (selectedLead) {
         fetchCallSessions(selectedLead)
       }
-    } catch (ex) {
-      console.log(ex)
-      setError(ex?.response?.data?.error)
+    } catch (error) {
+      console.error('Reset attempts error:', error)
+
+      toast.error(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to reset attempts'
+      )
+    } finally {
+      setShowResetModal(false)
+      setResettingLead(null)
     }
   }
 
@@ -103,10 +156,24 @@ const Calls = () => {
     try {
       const res = await getAgents()
       setAgents(res.data.data || [])
-    } catch (err) {
-      console.log(err)
-      setError('Failed to fetch agents')
-    }
+    } catch (error) {
+        console.error('Fetch agents error:', error)
+
+        if (error.response) {
+          console.log(error.response.data)
+          console.log(error.response.status)
+        } else if (error.request) {
+          console.log(error.request)
+        } else {
+          console.log('Error', error.message)
+        }
+
+        toast.error(
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          'Failed to fetch agents'
+        )
+      }
   }
 
   const handleAgentCall = async (agentId) => {
@@ -117,11 +184,26 @@ const Calls = () => {
         agentId,
       })
 
-      alert('Call started successfully!')
+      toast.success('Call started successfully')
       setShowAgentModal(false)
-    } catch (err) {
-      setError(err?.response?.data?.error)
-      alert(err?.response?.data?.error)
+    } catch (error) {
+      console.error('Start agent call error:', error)
+
+      if (error.response) {
+        console.log(error.response.data)
+        console.log(error.response.status)
+      } else if (error.request) {
+        console.log(error.request)
+      } else {
+        console.log('Error', error.message)
+      }
+
+      const msg =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to start call'
+
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -138,12 +220,6 @@ const Calls = () => {
           </p>
         </div>
       </div>
-
-      {error && (
-        <div className='mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg'>
-          {error}
-        </div>
-      )}
 
       {/* ---------------- LEADS TABLE ---------------- */}
       <div className='bg-white rounded-xl shadow-lg overflow-hidden mb-12'>
@@ -201,7 +277,10 @@ const Calls = () => {
                     </button>
 
                     <button
-                      onClick={() => handleResetAttempts(lead._id)}
+                      onClick={() => {
+                        setResettingLead(lead)
+                        setShowResetModal(true)
+                      }}
                       className='px-3 py-1.5 rounded-md text-xs font-semibold bg-[#f3ebe3] text-[#814c27] hover:bg-[#e8dccf]'
                     >
                       Reset Attempts
@@ -285,7 +364,10 @@ const Calls = () => {
 
                       {session.status === 'active' && (
                         <button
-                          onClick={() => handleEndCall(session._id)}
+                          onClick={() => {
+                            setEndingSession(session)
+                            setShowEndCallModal(true)
+                          }}
                           className='px-3 py-1.5 rounded-md text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100'
                         >
                           End Call
@@ -347,6 +429,79 @@ const Calls = () => {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showResetModal && resettingLead && (
+        <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-50'>
+          <div className='bg-white rounded-xl shadow-xl w-full max-w-md p-6'>
+
+            <h3 className='text-xl font-bold text-[#2f1e14] mb-3'>
+              Reset Attempts
+            </h3>
+
+            <p className='text-sm text-gray-600 mb-6'>
+              Are you sure you want to reset attempts for
+              <span className='font-semibold text-gray-900'>
+                {' '}“{resettingLead.name}”
+              </span>
+              ?
+            </p>
+
+            <div className='flex justify-end gap-3'>
+              <button
+                onClick={() => {
+                  setShowResetModal(false)
+                  setResettingLead(null)
+                }}
+                className='px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200'
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmResetAttempts}
+                className='px-5 py-2 rounded-lg bg-[#814c27] text-white hover:bg-[#9b5b38]'
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEndCallModal && endingSession && (
+        <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-50'>
+          <div className='bg-white rounded-xl shadow-xl w-full max-w-md p-6'>
+
+            <h3 className='text-xl font-bold text-[#2f1e14] mb-3'>
+              End Call
+            </h3>
+
+            <p className='text-sm text-gray-600 mb-6'>
+              End this active call session?
+            </p>
+
+            <div className='flex justify-end gap-3'>
+              <button
+                onClick={() => {
+                  setShowEndCallModal(false)
+                  setEndingSession(null)
+                }}
+                className='px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200'
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmEndCall}
+                className='px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700'
+              >
+                End Call
+              </button>
+            </div>
+
           </div>
         </div>
       )}

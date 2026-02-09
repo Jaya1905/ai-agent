@@ -1,21 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getQuestionById } from '../services/api';
+import { toast } from 'react-toastify';
 
 const QuestionDetails = () => {
   const { id } = useParams();
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchQuestion = async () => {
       try {
         const response = await getQuestionById(id);
         setQuestion(response.data.data);
-      } catch (_) {
-        setError('Failed to fetch question details');
-      } finally {
+      } catch (error) {
+          console.error('Fetch question error:', error);
+
+          if (error.response) {
+            console.log(error.response.data);
+            console.log(error.response.status);
+          } else if (error.request) {
+            console.log(error.request);
+          } else {
+            console.log('Error', error.message);
+          }
+
+          toast.error(
+            error.response?.data?.error ||
+            error.response?.data?.message ||
+            'Failed to fetch question details'
+          );
+        } finally {
         setLoading(false);
       }
     };
@@ -24,7 +39,6 @@ const QuestionDetails = () => {
   }, [id]);
 
   if (loading) return <p className="p-8 text-gray-500">Loading...</p>;
-  if (error) return <p className="p-8 text-red-500">{error}</p>;
   if (!question) return <p className="p-8">Question not found</p>;
 
   return (

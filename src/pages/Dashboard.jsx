@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getHealth } from '../services/api';
+import { toast } from 'react-toastify';
 import {
   FaHeartbeat,
   FaTags,
@@ -10,15 +11,20 @@ import {
 const Dashboard = () => {
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchHealth = async () => {
       try {
         const response = await getHealth();
         setHealth(response.data);
-      } catch (_) {
-        setError('Failed to fetch health status');
+      } catch (error) {
+        console.error('Fetch health error:', error);
+
+        toast.error(
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          'Failed to fetch health status'
+        );
       } finally {
         setLoading(false);
       }
@@ -56,8 +62,6 @@ const Dashboard = () => {
           <div className="mt-6">
             {loading ? (
               <p className="text-gray-400">Loading...</p>
-            ) : error ? (
-              <p className="text-red-500">{error}</p>
             ) : (
               <p className="text-green-600 font-semibold flex items-center gap-2">
                 ✅ {health?.message || 'Healthy'}

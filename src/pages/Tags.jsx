@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getTags, createTag, updateTag, deleteTag } from '../services/api';
+import { toast } from 'react-toastify';
 
 const Tags = () => {
   const [tags, setTags] = useState([]);
@@ -29,8 +30,23 @@ const Tags = () => {
     try {
       const response = await getTags();
       setTags(response.data.data || []);
-    } catch (_) {
-      setError('Failed to fetch tags');
+    } catch (error) {
+      console.error('error = ', error)
+
+      if (error.response) {
+        console.log(error.response.data)
+        console.log(error.response.status)
+        console.log(error.response.headers)
+      } else if (error.request) {
+        console.log(error.request)
+      } else {
+        console.log('Error', error.message)
+      }
+
+      console.log(error.config)
+      toast.error(
+        error.response?.data?.error || 'Failed to fetch tags'
+      )
     } finally {
       setLoading(false);
     }
@@ -42,6 +58,7 @@ const Tags = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
 
     try {
       if (editingTag) {
@@ -51,10 +68,30 @@ const Tags = () => {
       }
 
       fetchTags();
-      resetForm();
-    } catch (_) {
-      setError('Failed to save tag');
+
+        toast.success(
+          editingTag ? 'Tag updated successfully' : 'Tag created successfully'
+        );
+
+        resetForm();
+    } catch (error) {
+      console.error('error = ', error)
+
+      if (error.response) {
+        console.log(error.response.data)
+        console.log(error.response.status)
+        console.log(error.response.headers)
+      } else if (error.request) {
+        console.log(error.request)
+      } else {
+        console.log('Error', error.message)
+      }
+      console.log(error.config)
+      toast.error(
+        error.response?.data?.error || 'Failed to save tag'
+      )
     }
+
   };
 
   const handleEdit = (tag) => {
@@ -82,9 +119,25 @@ const Tags = () => {
     try {
       await deleteTag(deletingTag._id);
       fetchTags();
-    } catch (_) {
-      setError('Failed to delete tag');
-    } finally {
+      toast.success('Tag deleted successfully');
+    } catch (error) {
+      console.error('error = ', error)
+
+      if (error.response) {
+        console.log(error.response.data)
+        console.log(error.response.status)
+        console.log(error.response.headers)
+      } else if (error.request) {
+        console.log(error.request)
+      } else {
+        console.log('Error', error.message)
+      }
+
+      console.log(error.config)
+      toast.error(
+        error.response?.data?.error || 'Failed to delete tag'
+      )
+    }finally {
       setShowDeleteModal(false);
       setDeletingTag(null);
     }
@@ -136,12 +189,6 @@ const Tags = () => {
           + Add New Tag
         </button>
       </div>
-
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {error}
-        </div>
-      )}
 
       {/* TABLE */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">

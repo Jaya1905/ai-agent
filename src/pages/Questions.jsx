@@ -7,6 +7,7 @@ import {
   deleteQuestion,
   getTags,
 } from '../services/api';
+import { toast } from 'react-toastify';
 
 const Questions = () => {
   const [questions, setQuestions] = useState([]);
@@ -19,9 +20,18 @@ const Questions = () => {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingQuestion, setDeletingQuestion] = useState(null);
+  const [showTranslationsModal, setShowTranslationsModal] = useState(false)
+  const [selectedQuestion, setSelectedQuestion] = useState(null)
+
 
   const [formData, setFormData] = useState({
-    text: '',
+    question: {
+      english: '',
+      mandarin: '',
+      spanish: '',
+      cantonese: '',
+      latin: '',
+    },
     answerType: 'yes/no',
     required: true,
     active: true,
@@ -32,6 +42,7 @@ const Questions = () => {
   useEffect(() => {
     const loadAll = async () => {
       try {
+        setError(null);
         setLoading(true);
 
         const [qRes, tRes] = await Promise.all([
@@ -41,9 +52,23 @@ const Questions = () => {
 
         setQuestions(qRes.data.data || []);
         setTags(tRes.data.data || []);
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load data');
+      } catch (error) {
+        console.error('Load questions/tags error:', error);
+
+        if (error.response) {
+          console.log(error.response.data);
+          console.log(error.response.status);
+        } else if (error.request) {
+          console.log(error.request);
+        } else {
+          console.log('Error', error.message);
+        }
+
+        toast.error(
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          'Failed to load data'
+        );
       } finally {
         setLoading(false);
       }
@@ -85,10 +110,30 @@ const Questions = () => {
       setQuestions(refreshed.data.data || []);
 
       setError(null);
+      toast.success(
+        editingQuestion
+          ? 'Question updated successfully'
+          : 'Question created successfully'
+      );
+
       resetForm();
-    } catch (err) {
-      console.error(err);
-      setError('Failed to save question');
+    } catch (error) {
+      console.error('Save question error:', error);
+
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+      } else if (error.request) {
+        console.log(error.request);
+      } else {
+        console.log('Error', error.message);
+      }
+
+      toast.error(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to save question'
+      );
     }
   };
 
@@ -96,7 +141,13 @@ const Questions = () => {
     setEditingQuestion(question);
 
     setFormData({
-      text: question.text,
+      question: {
+        english: question.question?.english || '',
+        mandarin: question.question?.mandarin || '',
+        spanish: question.question?.spanish || '',
+        cantonese: question.question?.cantonese || '',
+        latin: question.question?.latin || '',
+      },
       answerType: question.answerType,
       required: question.required,
       active: question.active,
@@ -125,12 +176,27 @@ const Questions = () => {
 
       const refreshed = await getQuestions();
       setQuestions(refreshed.data.data || []);
+      
+      toast.success('Question deleted successfully');
+    } catch (error) {
+      console.error('Delete question error:', error);
 
-      setError(null);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to delete question');
-    } finally {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+      } else if (error.request) {
+        console.log(error.request);
+      } else {
+        console.log('Error', error.message);
+      }
+
+      toast.error(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to delete question'
+      );
+
+    }finally {
       setShowDeleteModal(false);
       setDeletingQuestion(null);
     }
@@ -138,7 +204,13 @@ const Questions = () => {
 
   const resetForm = () => {
     setFormData({
-      text: '',
+        question: {
+        english: '',
+        mandarin: '',
+        spanish: '',
+        cantonese: '',
+        latin: '',
+      },
       answerType: 'yes/no',
       required: true,
       active: true,
@@ -186,12 +258,6 @@ const Questions = () => {
         </button>
       </div>
 
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {error}
-        </div>
-      )}
-
       {/* TABLE */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
 
@@ -228,7 +294,7 @@ const Questions = () => {
                   className="hover:bg-[#f9f6f3] transition"
                 >
                   <td className="px-6 py-4 font-medium text-gray-900">
-                    {question.text}
+                    {question.question?.english || '-'}
                   </td>
 
                   <td className="px-6 py-4 text-sm">
@@ -287,6 +353,24 @@ const Questions = () => {
                       </Link>
 
                       <button
+                        onClick={() => {
+                          setSelectedQuestion(question)
+                          setShowTranslationsModal(true)
+                        }}
+                        className="
+                          px-3 py-1.5
+                          rounded-md
+                          text-xs
+                          font-semibold
+                          bg-purple-50
+                          text-purple-700
+                          hover:bg-purple-100
+                        "
+                      >
+                        Translations
+                      </button>
+
+                      <button
                         onClick={() => handleEdit(question)}
                         className="
                           px-3 py-1.5
@@ -332,64 +416,114 @@ const Questions = () => {
       {showForm && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+          <div className="bg-white
+            rounded-xl
+            shadow-xl
+            w-full
+            max-w-4xl
+            max-h-[90vh]
+            overflow-hidden
+            flex
+            flex-col">
 
-            <h3 className="text-xl font-bold mb-6 text-[#2f1e14]">
+            <h3 className="text-xl font-bold mb-6 px-6 pt-6 text-[#2f1e14]">
               {editingQuestion ? 'Edit Question' : 'Add New Question'}
             </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} id="question-form" className="flex-1 overflow-y-auto px-6 space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">
+                    Question (English)
+                  </label>
 
-              <div>
-                <label className="text-sm font-medium">Text</label>
-                <textarea
-                  value={formData.text}
-                  onChange={(e) =>
-                    setFormData({ ...formData, text: e.target.value })
-                  }
-                  rows="3"
-                  className="mt-1 w-full rounded-lg border px-3 py-2"
-                  required
-                />
-              </div>
+                  <textarea
+                    rows="2"
+                    value={formData.question.english}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        question: {
+                          ...formData.question,
+                          english: e.target.value,
+                        },
+                      })
+                    }
+                    className="mt-1 w-full rounded-lg border px-3 py-2"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              <div>
-                <label className="text-sm font-medium">Answer Type</label>
-                <select
-                  value={formData.answerType}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      answerType: e.target.value,
-                    })
-                  }
-                  className="mt-1 w-full rounded-lg border px-3 py-2"
-                >
-                  <option value="yes/no">Yes / No</option>
-                  <option value="text">Text</option>
-                  <option value="numeric">Numeric</option>
-                  <option value="scale">Scale</option>
-                </select>
-              </div>
+                  {[
+                    { key: 'mandarin', label: 'Mandarin' },
+                    { key: 'spanish', label: 'Spanish' },
+                    { key: 'cantonese', label: 'Cantonese' },
+                    { key: 'latin', label: 'Latin' },
+                  ].map((lang) => (
+                    <div key={lang.key}>
+                      <label className="text-sm font-medium">
+                        Question ({lang.label})
+                      </label>
 
-              <div>
-                <label className="text-sm font-medium">Tag</label>
-                <select
-                  value={formData.tagId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, tagId: e.target.value })
-                  }
-                  className="mt-1 w-full rounded-lg border px-3 py-2"
-                  required
-                >
-                  <option value="">Select Tag</option>
-                  {tags.map((tag) => (
-                    <option key={tag._id} value={tag._id}>
-                      {tag.name}
-                    </option>
+                      <textarea
+                        rows="2"
+                        value={formData.question[lang.key]}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            question: {
+                              ...formData.question,
+                              [lang.key]: e.target.value,
+                            },
+                          })
+                        }
+                        className="mt-1 w-full rounded-lg border px-3 py-2"
+                      />
+                    </div>
                   ))}
-                </select>
+                </div>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Answer Type</label>
+                    <select
+                      value={formData.answerType}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          answerType: e.target.value,
+                        })
+                      }
+                      className="mt-1 w-full rounded-lg border px-3 py-2"
+                    >
+                      <option value="yes/no">Yes / No</option>
+                      <option value="text">Text</option>
+                      <option value="numeric">Numeric</option>
+                      <option value="scale">Scale</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Tag</label>
+                    <select
+                      value={formData.tagId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, tagId: e.target.value })
+                      }
+                      className="mt-1 w-full rounded-lg border px-3 py-2"
+                      required
+                    >
+                      <option value="">Select Tag</option>
+                      {tags.map((tag) => (
+                        <option key={tag._id} value={tag._id}>
+                          {tag.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+              </div>         
 
               <div>
                 <label className="text-sm font-medium">Order</label>
@@ -434,9 +568,10 @@ const Questions = () => {
                   />
                   Active
                 </label>
-              </div>
+              </div>           
 
-              <div className="flex justify-end gap-3 pt-4">
+            </form>
+            <div className="border-t bg-white px-6 py-4 flex justify-end gap-3">
 
                 <button
                   type="button"
@@ -453,9 +588,65 @@ const Questions = () => {
                   {editingQuestion ? 'Update' : 'Create'}
                 </button>
 
-              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-            </form>
+      {/* TRANSLATIONS MODAL */}
+      {showTranslationsModal && selectedQuestion && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-[#2f1e14]">
+                Question Translations
+              </h3>
+
+              <button
+                onClick={() => {
+                  setShowTranslationsModal(false)
+                  setSelectedQuestion(null)
+                }}
+                className="text-gray-500 hover:text-gray-800"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+
+              {[
+                { key: 'english', label: 'English' },
+                { key: 'mandarin', label: 'Mandarin' },
+                { key: 'spanish', label: 'Spanish' },
+                { key: 'cantonese', label: 'Cantonese' },
+                { key: 'latin', label: 'Latin' },
+              ].map((lang) => (
+                <div key={lang.key}>
+                  <p className="text-sm font-semibold text-gray-600">
+                    {lang.label}
+                  </p>
+
+                  <div className="mt-1 rounded-lg border bg-gray-50 px-3 py-2 text-sm">
+                    {selectedQuestion.question?.[lang.key] || '—'}
+                  </div>
+                </div>
+              ))}
+
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => {
+                  setShowTranslationsModal(false)
+                  setSelectedQuestion(null)
+                }}
+                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+              >
+                Close
+              </button>
+            </div>
+
           </div>
         </div>
       )}
@@ -473,7 +664,7 @@ const Questions = () => {
             <p className="text-sm text-gray-600 mb-6">
               Are you sure you want to delete
               <span className="font-semibold text-gray-900">
-                {' '}“{deletingQuestion.text.slice(0, 60)}...”
+                {' '}“{deletingQuestion.question?.english?.slice(0,60)}...”
               </span>
               ? This action cannot be undone.
             </p>
